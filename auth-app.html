@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My App — Login</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #f5f5f5;
+    --surface: #ffffff;
+    --border: rgba(0,0,0,0.12);
+    --border-hover: rgba(0,0,0,0.25);
+    --text: #1a1a1a;
+    --text-muted: #666;
+    --text-hint: #999;
+    --accent: #185FA5;
+    --accent-dark: #0C447C;
+    --accent-bg: #E6F1FB;
+    --accent-text: #0C447C;
+    --success: #0F6E56;
+    --success-bg: #E1F5EE;
+    --danger: #A32D2D;
+    --danger-bg: #FCEBEB;
+    --radius: 8px;
+    --radius-lg: 12px;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1a1a1a;
+      --surface: #242424;
+      --border: rgba(255,255,255,0.12);
+      --border-hover: rgba(255,255,255,0.25);
+      --text: #f0f0f0;
+      --text-muted: #aaa;
+      --text-hint: #666;
+      --accent: #378ADD;
+      --accent-dark: #85B7EB;
+      --accent-bg: #0C447C;
+      --accent-text: #B5D4F4;
+      --success: #5DCAA5;
+      --success-bg: #085041;
+      --danger: #F09595;
+      --danger-bg: #501313;
+    }
+  }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+  }
+
+  .screen { display: none; width: 100%; max-width: 420px; }
+  .screen.active { display: block; }
+
+  .card {
+    background: var(--surface);
+    border: 0.5px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 2rem;
+  }
+
+  .logo {
+    width: 40px; height: 40px; border-radius: 10px;
+    background: var(--accent); display: flex; align-items: center;
+    justify-content: center; margin-bottom: 1.25rem;
+  }
+  .logo svg { width: 22px; height: 22px; fill: #fff; }
+
+  h2 { font-size: 20px; font-weight: 600; color: var(--text); margin-bottom: 4px; }
+  .sub { font-size: 14px; color: var(--text-muted); margin-bottom: 1.5rem; }
+
+  .field { margin-bottom: 1rem; }
+  .field label { display: block; font-size: 13px; font-weight: 500; color: var(--text-muted); margin-bottom: 5px; }
+  .pw-wrap { position: relative; }
+  .field input {
+    width: 100%; height: 40px; padding: 0 12px;
+    border: 1px solid var(--border); border-radius: var(--radius);
+    background: var(--surface); color: var(--text);
+    font-size: 14px; outline: none; transition: border-color 0.15s;
+  }
+  .pw-wrap input { padding-right: 52px; }
+  .field input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-bg); }
+  .field input.invalid { border-color: var(--danger); }
+  .pw-btn {
+    position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
+    background: none; border: none; cursor: pointer; color: var(--text-hint);
+    font-size: 12px; font-weight: 500; padding: 4px;
+  }
+  .pw-btn:hover { color: var(--text-muted); }
+
+  .err-msg { font-size: 12px; color: var(--danger); margin-top: 5px; display: none; }
+  .err-msg.show { display: block; }
+
+  .alert {
+    padding: 10px 14px; border-radius: var(--radius); font-size: 13px;
+    margin-bottom: 1.25rem; display: none;
+  }
+  .alert.show { display: block; }
+  .alert.success { background: var(--success-bg); color: var(--success); }
+  .alert.danger { background: var(--danger-bg); color: var(--danger); }
+
+  .btn {
+    width: 100%; height: 40px; border-radius: var(--radius);
+    font-size: 14px; font-weight: 500; cursor: pointer;
+    border: none; transition: background 0.15s, transform 0.1s;
+  }
+  .btn:active { transform: scale(0.98); }
+  .btn-primary { background: var(--accent); color: #fff; }
+  .btn-primary:hover { background: var(--accent-dark); }
+  .btn-ghost {
+    background: transparent; border: 1px solid var(--border);
+    color: var(--text); width: auto; padding: 0 16px; height: 36px;
+  }
+  .btn-ghost:hover { background: var(--bg); }
+
+  .divider {
+    display: flex; align-items: center; gap: 12px;
+    margin: 1.25rem 0; font-size: 12px; color: var(--text-hint);
+  }
+  .divider::before, .divider::after {
+    content: ''; flex: 1; height: 0.5px; background: var(--border);
+  }
+
+  .link-row { text-align: center; font-size: 13px; color: var(--text-muted); margin-top: 1rem; }
+  .link-row a { color: var(--accent); cursor: pointer; text-decoration: none; font-weight: 500; }
+  .link-row a:hover { text-decoration: underline; }
+
+  .avatar {
+    width: 60px; height: 60px; border-radius: 50%;
+    background: var(--accent-bg); color: var(--accent-text);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px; font-weight: 600; flex-shrink: 0;
+  }
+
+  .dash-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; }
+  .user-header { display: flex; align-items: center; gap: 14px; margin-bottom: 1.5rem; padding-bottom: 1.5rem; border-bottom: 0.5px solid var(--border); }
+  .user-info-name { font-size: 17px; font-weight: 600; color: var(--text); }
+  .user-info-email { font-size: 13px; color: var(--text-muted); margin-top: 2px; }
+
+  .badge {
+    display: inline-flex; align-items: center; gap: 5px;
+    background: var(--success-bg); color: var(--success);
+    font-size: 11px; font-weight: 600; padding: 3px 9px;
+    border-radius: 20px; margin-top: 5px;
+  }
+  .badge::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--success); }
+
+  .info-table { width: 100%; border-collapse: collapse; }
+  .info-table tr td { padding: 10px 0; border-bottom: 0.5px solid var(--border); font-size: 14px; }
+  .info-table tr:last-child td { border-bottom: none; }
+  .info-table td:first-child { color: var(--text-muted); width: 40%; }
+  .info-table td:last-child { color: var(--text); font-weight: 500; text-align: right; }
+  .mono { font-family: 'SF Mono', 'Fira Code', monospace; font-size: 12px; }
+
+  .strength-bar { display: flex; gap: 4px; margin-top: 6px; }
+  .strength-bar span { height: 3px; flex: 1; border-radius: 2px; background: var(--border); transition: background 0.2s; }
+
+  @media (max-width: 480px) {
+    .card { padding: 1.5rem; }
+    body { align-items: flex-start; padding-top: 2rem; }
+  }
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="screen-login" class="screen active">
+  <div class="card">
+    <div class="logo">
+      <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+    </div>
+    <h2>Welcome back</h2>
+    <p class="sub">Sign in to continue to your account</p>
+
+    <div id="login-alert" class="alert"></div>
+
+    <div class="field">
+      <label>Email address</label>
+      <input type="email" id="login-email" placeholder="you@example.com" autocomplete="email">
+      <div class="err-msg" id="login-email-err"></div>
+    </div>
+    <div class="field">
+      <label>Password</label>
+      <div class="pw-wrap">
+        <input type="password" id="login-pw" placeholder="Your password" autocomplete="current-password">
+        <button class="pw-btn" onclick="togglePw('login-pw',this)">show</button>
+      </div>
+      <div class="err-msg" id="login-pw-err"></div>
+    </div>
+
+    <button class="btn btn-primary" style="margin-top:0.5rem;" onclick="doLogin()">Sign in</button>
+
+    <div class="link-row" style="margin-top:0.75rem;">
+      <a onclick="show('forgot')">Forgot your password?</a>
+    </div>
+    <div class="divider">or</div>
+    <div class="link-row">
+      Don't have an account? <a onclick="show('register')">Create one free</a>
+    </div>
+  </div>
+</div>
+
+<!-- REGISTER -->
+<div id="screen-register" class="screen">
+  <div class="card">
+    <div class="logo">
+      <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+    </div>
+    <h2>Create your account</h2>
+    <p class="sub">Join us — it only takes a moment</p>
+
+    <div id="reg-alert" class="alert"></div>
+
+    <div class="field">
+      <label>Full name</label>
+      <input type="text" id="reg-name" placeholder="Your full name" autocomplete="name">
+      <div class="err-msg" id="reg-name-err"></div>
+    </div>
+    <div class="field">
+      <label>Email address</label>
+      <input type="email" id="reg-email" placeholder="you@example.com" autocomplete="email">
+      <div class="err-msg" id="reg-email-err"></div>
+    </div>
+    <div class="field">
+      <label>Password</label>
+      <div class="pw-wrap">
+        <input type="password" id="reg-pw" placeholder="At least 6 characters" autocomplete="new-password" oninput="checkStrength(this.value)">
+        <button class="pw-btn" onclick="togglePw('reg-pw',this)">show</button>
+      </div>
+      <div class="strength-bar">
+        <span id="s1"></span><span id="s2"></span><span id="s3"></span><span id="s4"></span>
+      </div>
+      <div class="err-msg" id="reg-pw-err"></div>
+    </div>
+    <div class="field">
+      <label>Confirm password</label>
+      <div class="pw-wrap">
+        <input type="password" id="reg-pw2" placeholder="Repeat password" autocomplete="new-password">
+        <button class="pw-btn" onclick="togglePw('reg-pw2',this)">show</button>
+      </div>
+      <div class="err-msg" id="reg-pw2-err"></div>
+    </div>
+
+    <button class="btn btn-primary" onclick="doRegister()">Create account</button>
+    <div class="divider">or</div>
+    <div class="link-row">Already have an account? <a onclick="show('login')">Sign in</a></div>
+  </div>
+</div>
+
+<!-- FORGOT PASSWORD -->
+<div id="screen-forgot" class="screen">
+  <div class="card">
+    <div class="logo">
+      <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+    </div>
+    <h2>Reset password</h2>
+    <p class="sub">Enter your email and we'll send a reset code</p>
+
+    <div id="forgot-alert" class="alert"></div>
+
+    <div id="forgot-step1">
+      <div class="field">
+        <label>Email address</label>
+        <input type="email" id="forgot-email" placeholder="you@example.com">
+        <div class="err-msg" id="forgot-email-err"></div>
+      </div>
+      <button class="btn btn-primary" onclick="doForgotStep1()">Send reset code</button>
+    </div>
+
+    <div id="forgot-step2" style="display:none;">
+      <div class="field">
+        <label>Reset code</label>
+        <input type="text" id="forgot-code" placeholder="Enter the 4-digit code" maxlength="4">
+        <div class="err-msg" id="forgot-code-err"></div>
+      </div>
+      <div class="field">
+        <label>New password</label>
+        <div class="pw-wrap">
+          <input type="password" id="forgot-newpw" placeholder="New password (min 6 chars)">
+          <button class="pw-btn" onclick="togglePw('forgot-newpw',this)">show</button>
+        </div>
+        <div class="err-msg" id="forgot-newpw-err"></div>
+      </div>
+      <button class="btn btn-primary" onclick="doForgotStep2()">Set new password</button>
+    </div>
+
+    <div class="divider">or</div>
+    <div class="link-row"><a onclick="show('login')">Back to sign in</a></div>
+  </div>
+</div>
+
+<!-- DASHBOARD -->
+<div id="screen-dashboard" class="screen">
+  <div class="card">
+    <div class="dash-top">
+      <h2 style="font-size:16px;">Dashboard</h2>
+      <button class="btn btn-ghost" onclick="doLogout()">Sign out</button>
+    </div>
+
+    <div class="user-header">
+      <div class="avatar" id="dash-avatar"></div>
+      <div>
+        <div class="user-info-name" id="dash-name"></div>
+        <div class="user-info-email" id="dash-email-display"></div>
+        <div class="badge">Active</div>
+      </div>
+    </div>
+
+    <table class="info-table">
+      <tr>
+        <td>Email</td>
+        <td id="dash-email"></td>
+      </tr>
+      <tr>
+        <td>Member since</td>
+        <td id="dash-joined"></td>
+      </tr>
+      <tr>
+        <td>Account ID</td>
+        <td class="mono" id="dash-id"></td>
+      </tr>
+      <tr>
+        <td>Total logins</td>
+        <td id="dash-logins"></td>
+      </tr>
+    </table>
+  </div>
+</div>
+
+<script>
+  let resetCode = null, resetEmail = null;
+
+  function getUsers() {
+    try { return JSON.parse(localStorage.getItem('app_users') || '{}'); } catch(e) { return {}; }
+  }
+  function saveUsers(u) { localStorage.setItem('app_users', JSON.stringify(u)); }
+
+  function show(page, alertType, alertMsg) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById('screen-' + page).classList.add('active');
+    clearErrors();
+    if (alertType && alertMsg) {
+      const el = document.getElementById(page + '-alert');
+      if (el) { el.className = 'alert ' + alertType + ' show'; el.textContent = alertMsg; }
+    }
+  }
+
+  function clearErrors() {
+    document.querySelectorAll('.err-msg').forEach(e => { e.className = 'err-msg'; e.textContent = ''; });
+    document.querySelectorAll('.alert').forEach(e => { e.className = 'alert'; });
+    document.querySelectorAll('input.invalid').forEach(e => e.classList.remove('invalid'));
+  }
+
+  function fieldErr(inputId, errId, msg) {
+    const inp = document.getElementById(inputId);
+    const err = document.getElementById(errId);
+    if (inp) inp.classList.add('invalid');
+    if (err) { err.className = 'err-msg show'; err.textContent = msg; }
+  }
+
+  function togglePw(id, btn) {
+    const inp = document.getElementById(id);
+    if (inp.type === 'password') { inp.type = 'text'; btn.textContent = 'hide'; }
+    else { inp.type = 'password'; btn.textContent = 'show'; }
+  }
+
+  function checkStrength(pw) {
+    const bars = ['s1','s2','s3','s4'];
+    const colors = ['#E24B4A','#EF9F27','#378ADD','#1D9E75'];
+    let score = 0;
+    if (pw.length >= 6) score++;
+    if (pw.length >= 10) score++;
+    if (/[A-Z]/.test(pw) && /[0-9]/.test(pw)) score++;
+    if (/[^A-Za-z0-9]/.test(pw)) score++;
+    bars.forEach((id, i) => {
+      document.getElementById(id).style.background = i < score ? colors[score - 1] : 'var(--border)';
+    });
+  }
+
+  function genId() { return 'USR-' + Math.random().toString(36).substr(2,8).toUpperCase(); }
+
+  function doRegister() {
+    clearErrors();
+    const name  = document.getElementById('reg-name').value.trim();
+    const email = document.getElementById('reg-email').value.trim().toLowerCase();
+    const pw    = document.getElementById('reg-pw').value;
+    const pw2   = document.getElementById('reg-pw2').value;
+    const users = getUsers();
+    let ok = true;
+
+    if (!name) { fieldErr('reg-name','reg-name-err','Name is required'); ok = false; }
+    if (!email || !email.includes('@')) { fieldErr('reg-email','reg-email-err','Enter a valid email address'); ok = false; }
+    else if (users[email]) { fieldErr('reg-email','reg-email-err','An account already exists with this email'); ok = false; }
+    if (pw.length < 6) { fieldErr('reg-pw','reg-pw-err','Password must be at least 6 characters'); ok = false; }
+    if (pw !== pw2) { fieldErr('reg-pw2','reg-pw2-err','Passwords do not match'); ok = false; }
+    if (!ok) return;
+
+    users[email] = {
+      name, email, password: pw,
+      joined: new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' }),
+      id: genId(),
+      logins: 0
+    };
+    saveUsers(users);
+
+    ['reg-name','reg-email','reg-pw','reg-pw2'].forEach(id => document.getElementById(id).value = '');
+    show('login', 'success', 'Account created successfully! You can now sign in.');
+  }
+
+  function doLogin() {
+    clearErrors();
+    const email = document.getElementById('login-email').value.trim().toLowerCase();
+    const pw    = document.getElementById('login-pw').value;
+    let ok = true;
+
+    if (!email) { fieldErr('login-email','login-email-err','Email is required'); ok = false; }
+    if (!pw)    { fieldErr('login-pw','login-pw-err','Password is required'); ok = false; }
+    if (!ok) return;
+
+    const users = getUsers();
+    const user  = users[email];
+    if (!user || user.password !== pw) {
+      const a = document.getElementById('login-alert');
+      a.className = 'alert danger show';
+      a.textContent = 'Incorrect email or password. Please try again.';
+      return;
+    }
+
+    users[email].logins = (user.logins || 0) + 1;
+    saveUsers(users);
+
+    ['login-email','login-pw'].forEach(id => document.getElementById(id).value = '');
+    loadDashboard(users[email]);
+    show('dashboard');
+  }
+
+  function loadDashboard(user) {
+    const initials = user.name.trim().split(/\s+/).map(w => w[0]).join('').substr(0,2).toUpperCase();
+    document.getElementById('dash-avatar').textContent = initials;
+    document.getElementById('dash-name').textContent = user.name;
+    document.getElementById('dash-email-display').textContent = user.email;
+    document.getElementById('dash-email').textContent = user.email;
+    document.getElementById('dash-joined').textContent = user.joined;
+    document.getElementById('dash-id').textContent = user.id;
+    document.getElementById('dash-logins').textContent = user.logins;
+  }
+
+  function doLogout() { show('login'); }
+
+  function doForgotStep1() {
+    clearErrors();
+    const email = document.getElementById('forgot-email').value.trim().toLowerCase();
+    if (!email || !email.includes('@')) { fieldErr('forgot-email','forgot-email-err','Enter a valid email address'); return; }
+    const users = getUsers();
+    if (!users[email]) { fieldErr('forgot-email','forgot-email-err','No account found with this email address'); return; }
+
+    resetEmail = email;
+    resetCode  = String(Math.floor(1000 + Math.random() * 9000));
+
+    document.getElementById('forgot-step1').style.display = 'none';
+    document.getElementById('forgot-step2').style.display = 'block';
+    const a = document.getElementById('forgot-alert');
+    a.className = 'alert success show';
+    a.textContent = 'Code sent! (Demo — your code is: ' + resetCode + ')';
+  }
+
+  function doForgotStep2() {
+    clearErrors();
+    const code  = document.getElementById('forgot-code').value.trim();
+    const newpw = document.getElementById('forgot-newpw').value;
+    let ok = true;
+
+    if (code !== resetCode) { fieldErr('forgot-code','forgot-code-err','Incorrect reset code'); ok = false; }
+    if (newpw.length < 6)   { fieldErr('forgot-newpw','forgot-newpw-err','Password must be at least 6 characters'); ok = false; }
+    if (!ok) return;
+
+    const users = getUsers();
+    users[resetEmail].password = newpw;
+    saveUsers(users);
+    resetCode = null; resetEmail = null;
+
+    document.getElementById('forgot-step2').style.display = 'none';
+    document.getElementById('forgot-step1').style.display = 'block';
+    document.getElementById('forgot-email').value = '';
+    document.getElementById('forgot-code').value = '';
+    document.getElementById('forgot-newpw').value = '';
+
+    show('login', 'success', 'Password reset! Sign in with your new password.');
+  }
+
+  document.addEventListener('keydown', function(e) {
+    if (e.key !== 'Enter') return;
+    const active = document.querySelector('.screen.active');
+    if (!active) return;
+    const id = active.id;
+    if (id === 'screen-login') doLogin();
+    else if (id === 'screen-register') doRegister();
+    else if (id === 'screen-forgot') {
+      if (document.getElementById('forgot-step2').style.display === 'none') doForgotStep1();
+      else doForgotStep2();
+    }
+  });
+</script>
+</body>
+</html>
